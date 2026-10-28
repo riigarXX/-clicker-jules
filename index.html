@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Clicker Moderno</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+      --glass-bg: rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-hover: rgba(255, 255, 255, 0.08);
+      --accent-gold: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.35);
+      --accent-purple: #8b5cf6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      overflow-x: hidden;
+      padding: 1.5rem;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, rgba(245, 158, 11, 0) 70%);
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      pointer-events: none;
+      animation: pulseGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.6; }
+      100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; }
+    }
+
+    /* Header & Stats */
+    header {
+      z-index: 10;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #cbd5e1;
+      opacity: 0.8;
+      margin-bottom: 0.5rem;
+    }
+
+    .counter-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 1.25rem 2.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 280px;
+    }
+
+    .cookie-count {
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+      text-shadow: 0 0 30px rgba(245, 158, 11, 0.2);
+    }
+
+    .cps-count {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Main Container */
+    main {
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+      margin: 2rem 0;
+    }
+
+    .game-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      width: 100%;
+      align-items: center;
+    }
+
+    @media (min-width: 768px) {
+      .game-layout {
+        grid-template-columns: 1fr 340px;
+      }
+    }
+
+    /* Cookie Stage */
+    .cookie-stage {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .cookie-wrapper {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .cookie-wrapper:hover {
+      transform: scale(1.05);
+    }
+
+    .cookie-wrapper:active {
+      transform: scale(0.92);
+    }
+
+    .cookie-svg {
+      width: 260px;
+      height: 260px;
+      filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.6));
+      transition: filter 0.3s ease;
+    }
+
+    @media (min-width: 480px) {
+      .cookie-svg {
+        width: 300px;
+        height: 300px;
+      }
+    }
+
+    .cookie-wrapper:hover .cookie-svg {
+      filter: drop-shadow(0 20px 45px rgba(245, 158, 11, 0.4));
+    }
+
+    /* Upgrades Drawer / Panel */
+    .upgrades-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .upgrade-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .upgrade-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .upgrade-card:hover:not(.disabled) {
+      background: var(--glass-hover);
+      border-color: rgba(245, 158, 11, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .upgrade-card.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .upgrade-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .upgrade-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .upgrade-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .upgrade-cost {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--accent-gold);
+    }
+
+    .upgrade-count {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+
+    }
+
+    /* Floating Pop-up Numbers (+1, etc.) */
+    .particle-number {
+      position: fixed;
+      pointer-events: none;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: #fbbf24;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      animation: floatUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(0.8);
+      }
+      50% {
+        transform: translate(-50%, -35px) scale(1.2);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -70px) scale(1);
+      }
+    }
+
+    /* Footer Controls */
+    footer {
+      z-index: 10;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-secondary {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-glow"></div>
+
+  <!-- Header Section -->
+  <header>
+    <div class="app-title">Cookie Clicker Modern</div>
+    <div class="counter-card">
+      <div id="cookie-count" class="cookie-count">0</div>
+      <div id="cps-count" class="cps-count">0 galletas por segundo</div>
+    </div>
+  </header>
+
+  <!-- Main Game Layout -->
+  <main>
+    <div class="game-layout">
+      <!-- Cookie Stage Area -->
+      <div class="cookie-stage">
+        <div class="cookie-wrapper" id="cookie-btn" role="button" tabindex="0" aria-label="Hacer clic en la galleta">
+          <svg class="cookie-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="cookieBase" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#eab308" />
+                <stop offset="60%" stop-color="#d97706" />
+                <stop offset="100%" stop-color="#92400e" />
+              </radialGradient>
+              <radialGradient id="chipGrad" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#451a03" />
+                <stop offset="100%" stop-color="#1c1917" />
+              </radialGradient>
+              <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.3"/>
+              </filter>
+            </defs>
+
+            <!-- Base Cookie Shape with Wavy Edges -->
+            <path d="M 100,10
+                     C 130,8 160,20 178,45
+                     C 195,70 195,105 185,135
+                     C 175,165 145,190 110,192
+                     C 75,194 40,180 22,152
+                     C 4,124 5,85 20,55
+                     C 35,25 70,12 100,10 Z"
+                  fill="url(#cookieBase)"
+                  filter="url(#shadow)"/>
+
+            <!-- Texture Details (Crust highlights) -->
+            <path d="M 40,35 C 70,20 130,22 160,40" stroke="#fef08a" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.3"/>
+            <path d="M 25,100 C 20,130 50,170 90,180" stroke="#78350f" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.4"/>
+
+            <!-- Chocolate Chips -->
+            <!-- Chip 1 -->
+            <path d="M 65 50 Q 80 45 75 60 Q 60 70 55 58 Z" fill="url(#chipGrad)" />
+            <!-- Chip 2 -->
+            <path d="M 125 45 Q 140 40 145 55 Q 130 68 120 55 Z" fill="url(#chipGrad)" />
+            <!-- Chip 3 -->
+            <path d="M 90 90 Q 110 80 115 100 Q 95 115 85 98 Z" fill="url(#chipGrad)" />
+            <!-- Chip 4 -->
+            <path d="M 50 110 Q 65 105 70 120 Q 55 135 45 120 Z" fill="url(#chipGrad)" />
+            <!-- Chip 5 -->
+            <path d="M 135 115 Q 155 110 150 130 Q 130 140 125 125 Z" fill="url(#chipGrad)" />
+            <!-- Chip 6 -->
+            <path d="M 95 145 Q 115 140 110 160 Q 90 165 85 150 Z" fill="url(#chipGrad)" />
+            <!-- Small Chip 7 -->
+            <circle cx="155" cy="85" r="7" fill="url(#chipGrad)" />
+            <!-- Small Chip 8 -->
+            <circle cx="45" cy="80" r="6" fill="url(#chipGrad)" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Upgrades Section -->
+      <div class="upgrades-panel">
+        <div class="panel-header">
+          <span>Mejoras & Autoclicks</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Tienda</span>
+        </div>
+        <div class="upgrade-list">
+
+          <!-- Multiplier Upgrade -->
+          <div class="upgrade-card" id="upg-click" role="button">
+            <div class="upgrade-info">
+              <div class="upgrade-title">Super Clic ⚡</div>
+              <div class="upgrade-desc">+1 galleta por cada clic</div>
+              <div class="upgrade-cost" id="cost-click">15 galletas</div>
+            </div>
+            <div class="upgrade-count" id="count-click">Nvl 0</div>
+          </div>
+
+          <!-- Autoclicker Upgrade -->
+          <div class="upgrade-card" id="upg-auto" role="button">
+            <div class="upgrade-info">
+              <div class="upgrade-title">Cursor Automático 🤖</div>
+              <div class="upgrade-desc">+1 galleta por segundo</div>
+              <div class="upgrade-cost" id="cost-auto">50 galletas</div>
+            </div>
+            <div class="upgrade-count" id="count-auto">0</div>
+          </div>
+
+          <!-- Grandma Bakery Upgrade -->
+          <div class="upgrade-card" id="upg-grandma" role="button">
+            <div class="upgrade-info">
+              <div class="upgrade-title">Abuela Repostera 👵</div>
+              <div class="upgrade-desc">+8 galletas por segundo</div>
+              <div class="upgrade-cost" id="cost-grandma">250 galletas</div>
+            </div>
+            <div class="upgrade-count" id="count-grandma">0</div>
+          </div>
+
+          <!-- Mega Factory Upgrade -->
+          <div class="upgrade-card" id="upg-factory" role="button">
+            <div class="upgrade-info">
+              <div class="upgrade-title">Fábrica Neon 🏭</div>
+              <div class="upgrade-desc">+40 galletas por segundo</div>
+              <div class="upgrade-cost" id="cost-factory">1000 galletas</div>
+            </div>
+            <div class="upgrade-count" id="count-factory">0</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Controls -->
+  <footer>
+    <button class="btn-secondary" id="btn-sound">🔊 Sonido: ON</button>
+    <button class="btn-secondary" id="btn-reset">🔄 Reiniciar</button>
+  </footer>
+
+  <script>
+    // Game State
+    const state = {
+      cookies: 0,
+      clickPower: 1,
+      soundEnabled: true,
+      upgrades: {
+        click: { count: 0, cost: 15, power: 1 },
+        auto: { count: 0, cost: 50, cps: 1 },
+        grandma: { count: 0, cost: 250, cps: 8 },
+        factory: { count: 0, cost: 1000, cps: 40 }
+      }
+    };
+
+    // Web Audio Synthesizer for modern click pop sounds
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playPopSound() {
+      if (!state.soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        // Frequency sweep for a nice pop sound
+        const pitch = 350 + Math.random() * 100;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.08);
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {
+        // Audio fallback ignore
+      }
+    }
+
+    // DOM Elements
+    const cookieBtn = document.getElementById('cookie-btn');
+    const cookieCountEl = document.getElementById('cookie-count');
+    const cpsCountEl = document.getElementById('cps-count');
+    const btnSound = document.getElementById('btn-sound');
+    const btnReset = document.getElementById('btn-reset');
+
+    const upgClickEl = document.getElementById('upg-click');
+    const upgAutoEl = document.getElementById('upg-auto');
+    const upgGrandmaEl = document.getElementById('upg-grandma');
+    const upgFactoryEl = document.getElementById('upg-factory');
+
+    // Storage persistence
+    function saveGame() {
+      localStorage.setItem('cookieClickerState', JSON.stringify(state));
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem('cookieClickerState');
+      if (saved) {
+        try {
+          const loaded = JSON.parse(saved);
+          state.cookies = loaded.cookies || 0;
+          state.clickPower = loaded.clickPower || 1;
+          state.soundEnabled = loaded.soundEnabled !== undefined ? loaded.soundEnabled : true;
+          if (loaded.upgrades) {
+            Object.keys(loaded.upgrades).forEach(key => {
+              if (state.upgrades[key]) {
+                state.upgrades[key].count = loaded.upgrades[key].count || 0;
+                state.upgrades[key].cost = loaded.upgrades[key].cost || state.upgrades[key].cost;
+              }
+            });
+          }
+        } catch(e) {
+          console.error("Error loading saved game:", e);
+        }
+      }
+      updateUI();
+    }
+
+    // Total CPS calculation
+    function getCPS() {
+      return (state.upgrades.auto.count * state.upgrades.auto.cps) +
+             (state.upgrades.grandma.count * state.upgrades.grandma.cps) +
+             (state.upgrades.factory.count * state.upgrades.factory.cps);
+    }
+
+    // Update UI elements
+    function updateUI() {
+      cookieCountEl.textContent = Math.floor(state.cookies).toLocaleString('es-ES');
+      cpsCountEl.textContent = `${getCPS().toLocaleString('es-ES')} galletas por segundo`;
+      btnSound.textContent = state.soundEnabled ? '🔊 Sonido: ON' : 'Mute Sonido: OFF';
+
+      // Update upgrades UI
+      // Super Clic
+      document.getElementById('cost-click').textContent = `${state.upgrades.click.cost} galletas`;
+      document.getElementById('count-click').textContent = `Nvl ${state.upgrades.click.count}`;
+      toggleUpgradeCard(upgClickEl, state.cookies >= state.upgrades.click.cost);
+
+      // Auto
+      document.getElementById('cost-auto').textContent = `${state.upgrades.auto.cost} galletas`;
+      document.getElementById('count-auto').textContent = `${state.upgrades.auto.count}`;
+      toggleUpgradeCard(upgAutoEl, state.cookies >= state.upgrades.auto.cost);
+
+      // Grandma
+      document.getElementById('cost-grandma').textContent = `${state.upgrades.grandma.cost} galletas`;
+      document.getElementById('count-grandma').textContent = `${state.upgrades.grandma.count}`;
+      toggleUpgradeCard(upgGrandmaEl, state.cookies >= state.upgrades.grandma.cost);
+
+      // Factory
+      document.getElementById('cost-factory').textContent = `${state.upgrades.factory.cost} galletas`;
+      document.getElementById('count-factory').textContent = `${state.upgrades.factory.count}`;
+      toggleUpgradeCard(upgFactoryEl, state.cookies >= state.upgrades.factory.cost);
+    }
+
+    function toggleUpgradeCard(element, canAfford) {
+      if (canAfford) {
+        element.classList.remove('disabled');
+      } else {
+        element.classList.add('disabled');
+      }
+    }
+
+    // Spawn floating particle text on click
+    function createParticle(x, y, text) {
+      const particle = document.createElement('div');
+      particle.className = 'particle-number';
+      particle.textContent = `+${text}`;
+
+      // Random horizontal offset variation
+      const randomOffset = (Math.random() - 0.5) * 20;
+      particle.style.left = `${x + randomOffset}px`;
+      particle.style.top = `${y}px`;
+
+      document.body.appendChild(particle);
+
+      particle.addEventListener('animationend', () => {
+        particle.remove();
+      });
+    }
+
+    // Click Cookie event handler
+    function handleCookieClick(e) {
+      state.cookies += state.clickPower;
+      playPopSound();
+
+      // Get click position
+      let posX = window.innerWidth / 2;
+      let posY = window.innerHeight / 2 - 50;
+      if (e.clientX && e.clientY) {
+        posX = e.clientX;
+        posY = e.clientY;
+      }
+
+      createParticle(posX, posY, state.clickPower);
+      updateUI();
+      saveGame();
+    }
+
+    cookieBtn.addEventListener('click', handleCookieClick);
+    cookieBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleCookieClick(e);
+      }
+    });
+
+    // Upgrade Buy Handlers
+    function buyUpgrade(key) {
+      const upg = state.upgrades[key];
+      if (state.cookies >= upg.cost) {
+        state.cookies -= upg.cost;
+        upg.count++;
+        if (key === 'click') {
+          state.clickPower += upg.power;
+        }
+        // Increase price exponentially
+        upg.cost = Math.floor(upg.cost * 1.5);
+        updateUI();
+        saveGame();
+      }
+    }
+
+    upgClickEl.addEventListener('click', () => buyUpgrade('click'));
+    upgAutoEl.addEventListener('click', () => buyUpgrade('auto'));
+    upgGrandmaEl.addEventListener('click', () => buyUpgrade('grandma'));
+    upgFactoryEl.addEventListener('click', () => buyUpgrade('factory'));
+
+    // Sound Toggle
+    btnSound.addEventListener('click', () => {
+      state.soundEnabled = !state.soundEnabled;
+      updateUI();
+      saveGame();
+    });
+
+    // Reset Game
+    btnReset.addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que deseas reiniciar tu progreso?')) {
+        localStorage.removeItem('cookieClickerState');
+        state.cookies = 0;
+        state.clickPower = 1;
+        state.upgrades.click = { count: 0, cost: 15, power: 1 };
+        state.upgrades.auto = { count: 0, cost: 50, cps: 1 };
+        state.upgrades.grandma = { count: 0, cost: 250, cps: 8 };
+        state.upgrades.factory = { count: 0, cost: 1000, cps: 40 };
+        updateUI();
+      }
+    });
+
+    // Auto-click loop (CPS tick every 100ms)
+    setInterval(() => {
+      const cps = getCPS();
+      if (cps > 0) {
+        state.cookies += cps / 10;
+        updateUI();
+      }
+    }, 100);
+
+    // Auto save game every 10s
+    setInterval(saveGame, 10000);
+
+    // Initialize
+    loadGame();
+  </script>
+</body>
+</html>
